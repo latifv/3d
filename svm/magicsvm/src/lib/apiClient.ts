@@ -63,9 +63,39 @@ export interface CompanyApiItem {
   tenant_id: string;
   code: string;
   name: string;
+  legal_name: string | null;
+  tax_number: string | null;
+  email: string | null;
+  phone: string | null;
   status: string;
+  address: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface CompanyCreateInput {
+  code: string;
+  name: string;
+  legal_name?: string | null;
+  tax_number?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  status?: string;
+  address?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface CompanyUpdateInput {
+  code?: string;
+  name?: string;
+  legal_name?: string | null;
+  tax_number?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  status?: string;
+  address?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface ProjectApiItem {
@@ -82,6 +112,7 @@ export interface ProjectApiItem {
 }
 
 export interface ProjectCreateInput {
+  tenant_id?: string | null;
   company_id: string;
   code: string;
   name: string;
@@ -97,6 +128,31 @@ export interface ProjectUpdateInput {
   description?: string | null;
   status?: string;
   metadata?: Record<string, unknown> | null;
+}
+
+export interface RoleApiItem {
+  id: string;
+  name: string;
+  scope: string;
+  created_at: string;
+  permission_keys: string[];
+}
+
+export interface RoleCreateInput {
+  name: string;
+  scope: string;
+  permission_keys: string[];
+}
+
+export interface RoleUpdateInput {
+  name?: string;
+  scope?: string;
+  permission_keys?: string[];
+}
+
+export interface PermissionApiItem {
+  id: string;
+  key: string;
 }
 
 type RequestMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
@@ -329,6 +385,30 @@ export async function listCompanies(accessToken: string): Promise<PaginatedRespo
   });
 }
 
+export async function createCompany(accessToken: string, payload: CompanyCreateInput): Promise<CompanyApiItem> {
+  return request<CompanyApiItem>("/api/v1/companies", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateCompany(
+  accessToken: string,
+  companyId: string,
+  payload: CompanyUpdateInput,
+): Promise<CompanyApiItem> {
+  return request<CompanyApiItem>(`/api/v1/companies/${companyId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deactivateCompany(accessToken: string, companyId: string): Promise<CompanyApiItem> {
+  return updateCompany(accessToken, companyId, { status: "PASSIVE" });
+}
+
 export async function listProjects(accessToken: string): Promise<PaginatedResponse<ProjectApiItem>> {
   return request<PaginatedResponse<ProjectApiItem>>("/api/v1/projects?page=1&page_size=100", {
     token: accessToken,
@@ -360,4 +440,57 @@ export async function deleteProject(accessToken: string, projectId: string): Pro
     method: "DELETE",
     token: accessToken,
   });
+}
+
+export async function listRoles(
+  accessToken: string,
+  page = 1,
+  pageSize = 100,
+): Promise<PaginatedResponse<RoleApiItem>> {
+  return request<PaginatedResponse<RoleApiItem>>(
+    `/api/v1/roles?page=${page}&page_size=${pageSize}`,
+    {
+      token: accessToken,
+    },
+  );
+}
+
+export async function createRole(accessToken: string, payload: RoleCreateInput): Promise<RoleApiItem> {
+  return request<RoleApiItem>("/api/v1/roles", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateRole(
+  accessToken: string,
+  roleId: string,
+  payload: RoleUpdateInput,
+): Promise<RoleApiItem> {
+  return request<RoleApiItem>(`/api/v1/roles/${roleId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteRole(accessToken: string, roleId: string): Promise<void> {
+  await request<null>(`/api/v1/roles/${roleId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function listPermissions(
+  accessToken: string,
+  page = 1,
+  pageSize = 100,
+): Promise<PaginatedResponse<PermissionApiItem>> {
+  return request<PaginatedResponse<PermissionApiItem>>(
+    `/api/v1/permissions?page=${page}&page_size=${pageSize}`,
+    {
+      token: accessToken,
+    },
+  );
 }
