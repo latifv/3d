@@ -167,6 +167,10 @@ export default {
         update: 'Update Tenant',
         deactivate: 'Deactivate Tenant',
       },
+      actions: {
+        addCompany: 'Add Company',
+        addUser: 'Add User',
+      },
     },
     companies: {
       title: 'Companies',
@@ -256,6 +260,41 @@ export default {
         sessionExpiredDescription: 'Please login again.',
         saveFailed: 'Company save failed',
         deactivateFailed: 'Company deactivate failed',
+      },
+    },
+    portalUsers: {
+      title: 'Portal Users',
+      searchPlaceholder: 'Search username, name or email...',
+      createLabel: 'New Portal User',
+      drawerTitle: 'Portal User',
+      fields: {
+        username: 'Username',
+        fullName: 'Full Name',
+        email: 'Email',
+        company: 'Company',
+        role: 'Role',
+        status: 'Status',
+        lastLogin: 'Last Login',
+        loginCount: 'Login Count',
+      },
+      filters: {
+        allStatuses: 'All Statuses',
+        allRoles: 'All Roles',
+      },
+      validation: {
+        usernameRequired: 'Username is required.',
+        fullNameRequired: 'Full name is required.',
+        emailInvalid: 'Invalid email address.',
+        companyRequired: 'Company is required.',
+        roleRequired: 'Role is required.',
+      },
+      actions: {
+        suspend: 'Suspend',
+        activate: 'Activate',
+        suspendTitle: 'Suspend Portal User',
+        activateTitle: 'Activate Portal User',
+        suspendDescription: 'Are you sure you want to suspend "{{username}}"?',
+        activateDescription: 'Are you sure you want to activate "{{username}}"?',
       },
     },
     roles: {

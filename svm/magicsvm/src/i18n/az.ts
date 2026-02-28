@@ -167,6 +167,10 @@ export default {
         update: 'Tenant Yenile',
         deactivate: 'Tenanti Passiv Et',
       },
+      actions: {
+        addCompany: 'Sirket Elave Et',
+        addUser: 'Istifadeci Elave Et',
+      },
     },
     companies: {
       title: 'Sirketler',
@@ -256,6 +260,41 @@ export default {
         sessionExpiredDescription: 'Zehmet olmasa yeniden daxil olun.',
         saveFailed: 'Sirket yadda saxlana bilmedi',
         deactivateFailed: 'Sirket passiv edile bilmedi',
+      },
+    },
+    portalUsers: {
+      title: 'Portal Istifadecileri',
+      searchPlaceholder: 'Istifadeci adi, ad soyad ve ya e-poct axtar...',
+      createLabel: 'Yeni Portal Istifadeci',
+      drawerTitle: 'Portal Istifadeci',
+      fields: {
+        username: 'Istifadeci Adi',
+        fullName: 'Ad Soyad',
+        email: 'E-poct',
+        company: 'Sirket',
+        role: 'Rol',
+        status: 'Status',
+        lastLogin: 'Son Giris',
+        loginCount: 'Giris Sayi',
+      },
+      filters: {
+        allStatuses: 'Butun Statuslar',
+        allRoles: 'Butun Rollar',
+      },
+      validation: {
+        usernameRequired: 'Istifadeci adi vacibdir.',
+        fullNameRequired: 'Ad soyad vacibdir.',
+        emailInvalid: 'Yanlis e-poct unvani.',
+        companyRequired: 'Sirket secimi vacibdir.',
+        roleRequired: 'Rol secimi vacibdir.',
+      },
+      actions: {
+        suspend: 'Dondur',
+        activate: 'Aktiv et',
+        suspendTitle: 'Portal Istifadecini Dondur',
+        activateTitle: 'Portal Istifadecini Aktiv Et',
+        suspendDescription: '"{{username}}" istifadecisini dondurmaq isteyirsiniz?',
+        activateDescription: '"{{username}}" istifadecisini aktiv etmek isteyirsiniz?',
       },
     },
     roles: {

@@ -167,6 +167,10 @@ export default {
         update: 'Tenant Guncelle',
         deactivate: 'Tenant Pasife Al',
       },
+      actions: {
+        addCompany: 'Sirket Ekle',
+        addUser: 'Kullanici Ekle',
+      },
     },
     companies: {
       title: 'Sirketler',
@@ -256,6 +260,41 @@ export default {
         sessionExpiredDescription: 'Lutfen tekrar giris yapin.',
         saveFailed: 'Sirket kaydi basarisiz',
         deactivateFailed: 'Sirket pasife alma basarisiz',
+      },
+    },
+    portalUsers: {
+      title: 'Portal Kullanicilari',
+      searchPlaceholder: 'Kullanici adi, ad-soyad veya e-posta ara...',
+      createLabel: 'Yeni Portal Kullanici',
+      drawerTitle: 'Portal Kullanici',
+      fields: {
+        username: 'Kullanici Adi',
+        fullName: 'Ad Soyad',
+        email: 'E-posta',
+        company: 'Sirket',
+        role: 'Rol',
+        status: 'Durum',
+        lastLogin: 'Son Giris',
+        loginCount: 'Giris Sayisi',
+      },
+      filters: {
+        allStatuses: 'Tum Durumlar',
+        allRoles: 'Tum Roller',
+      },
+      validation: {
+        usernameRequired: 'Kullanici adi zorunludur.',
+        fullNameRequired: 'Ad soyad zorunludur.',
+        emailInvalid: 'Gecersiz e-posta adresi.',
+        companyRequired: 'Sirket secimi zorunludur.',
+        roleRequired: 'Rol secimi zorunludur.',
+      },
+      actions: {
+        suspend: 'Askıya Al',
+        activate: 'Aktif Et',
+        suspendTitle: 'Portal Kullaniciyi Askiya Al',
+        activateTitle: 'Portal Kullaniciyi Aktif Et',
+        suspendDescription: '"{{username}}" kullanicisini askiya almak istiyor musunuz?',
+        activateDescription: '"{{username}}" kullanicisini aktif etmek istiyor musunuz?',
       },
     },
     roles: {

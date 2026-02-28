@@ -130,6 +130,58 @@ export interface ProjectUpdateInput {
   metadata?: Record<string, unknown> | null;
 }
 
+export interface PortalUserCompanyRef {
+  id: string;
+  name: string;
+}
+
+export interface PortalUserApiItem {
+  id: string;
+  tenant_id: string;
+  company_id: string | null;
+  company: PortalUserCompanyRef | null;
+  auth_user_id: string | null;
+  username: string | null;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  role_key: string | null;
+  status: string;
+  last_seen_at: string | null;
+  last_login_at: string | null;
+  login_count: number;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PortalUserListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  status?: string;
+  role?: string;
+  companyId?: string;
+}
+
+export interface PortalUserCreateInput {
+  username?: string | null;
+  full_name: string;
+  email?: string | null;
+  company_id: string;
+  role_key: string;
+  status?: "PENDING" | "ACTIVE" | "SUSPENDED";
+}
+
+export interface PortalUserUpdateInput {
+  username?: string | null;
+  full_name?: string;
+  email?: string | null;
+  company_id?: string;
+  role_key?: string;
+  status?: "PENDING" | "ACTIVE" | "SUSPENDED";
+}
+
 export interface RoleApiItem {
   id: string;
   name: string;
@@ -449,6 +501,113 @@ export async function deleteProject(accessToken: string, projectId: string): Pro
     method: "DELETE",
     token: accessToken,
   });
+}
+
+export async function listPortalUsers(
+  accessToken: string,
+  params: PortalUserListParams = {},
+): Promise<PaginatedResponse<PortalUserApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.role) {
+    query.set("role", params.role);
+  }
+  if (params.companyId) {
+    query.set("company_id", params.companyId);
+  }
+  return request<PaginatedResponse<PortalUserApiItem>>(`/api/v1/portal-users?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getPortalUser(accessToken: string, portalUserId: string): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>(`/api/v1/portal-users/${portalUserId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createPortalUser(
+  accessToken: string,
+  payload: PortalUserCreateInput,
+): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>("/api/v1/portal-users", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updatePortalUser(
+  accessToken: string,
+  portalUserId: string,
+  payload: PortalUserUpdateInput,
+): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>(`/api/v1/portal-users/${portalUserId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function suspendPortalUser(accessToken: string, portalUserId: string): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>(`/api/v1/portal-users/${portalUserId}:suspend`, {
+    method: "POST",
+    token: accessToken,
+  });
+}
+
+export async function activatePortalUser(accessToken: string, portalUserId: string): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>(`/api/v1/portal-users/${portalUserId}:activate`, {
+    method: "POST",
+    token: accessToken,
+  });
+}
+
+export async function exportPortalUsersCsv(
+  accessToken: string,
+  params: Omit<PortalUserListParams, "page" | "pageSize"> = {},
+): Promise<void> {
+  const query = new URLSearchParams();
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.role) {
+    query.set("role", params.role);
+  }
+  if (params.companyId) {
+    query.set("company_id", params.companyId);
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/portal-users/export?${query.toString()}`), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "text/csv",
+    },
+  });
+
+  if (!response.ok) {
+    const payload = await parseJson(response);
+    throw normalizeError(response.status, payload, response.headers.get("x-request-id"));
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "portal-users.csv";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
 }
 
 export async function listRoles(

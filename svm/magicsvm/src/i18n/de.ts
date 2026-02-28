@@ -167,6 +167,10 @@ export default {
         update: 'Mandant aktualisieren',
         deactivate: 'Mandant deaktivieren',
       },
+      actions: {
+        addCompany: 'Unternehmen hinzufugen',
+        addUser: 'Benutzer hinzufugen',
+      },
     },
     companies: {
       title: 'Unternehmen',
@@ -256,6 +260,41 @@ export default {
         sessionExpiredDescription: 'Bitte erneut anmelden.',
         saveFailed: 'Unternehmen konnte nicht gespeichert werden',
         deactivateFailed: 'Unternehmen konnte nicht deaktiviert werden',
+      },
+    },
+    portalUsers: {
+      title: 'Portal-Benutzer',
+      searchPlaceholder: 'Nach Benutzername, Name oder E-Mail suchen...',
+      createLabel: 'Neuer Portal-Benutzer',
+      drawerTitle: 'Portal-Benutzer',
+      fields: {
+        username: 'Benutzername',
+        fullName: 'Vollstandiger Name',
+        email: 'E-Mail',
+        company: 'Unternehmen',
+        role: 'Rolle',
+        status: 'Status',
+        lastLogin: 'Letzte Anmeldung',
+        loginCount: 'Anzahl Anmeldungen',
+      },
+      filters: {
+        allStatuses: 'Alle Status',
+        allRoles: 'Alle Rollen',
+      },
+      validation: {
+        usernameRequired: 'Benutzername ist erforderlich.',
+        fullNameRequired: 'Vollstandiger Name ist erforderlich.',
+        emailInvalid: 'Ungultige E-Mail-Adresse.',
+        companyRequired: 'Unternehmen ist erforderlich.',
+        roleRequired: 'Rolle ist erforderlich.',
+      },
+      actions: {
+        suspend: 'Sperren',
+        activate: 'Aktivieren',
+        suspendTitle: 'Portal-Benutzer sperren',
+        activateTitle: 'Portal-Benutzer aktivieren',
+        suspendDescription: 'Mochten Sie "{{username}}" wirklich sperren?',
+        activateDescription: 'Mochten Sie "{{username}}" wirklich aktivieren?',
       },
     },
     roles: {
