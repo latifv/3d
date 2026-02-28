@@ -440,6 +440,7 @@ export default function PortalUsersPage() {
                 company_id: String(values.company_id),
                 role_key: String(values.role_key),
                 status: String(values.status) as "PENDING" | "ACTIVE" | "SUSPENDED",
+                tenant_id: companies.find((company) => company.id === String(values.company_id))?.tenant_id ?? null,
               };
               if (crud.mode === "create") {
                 await createPortalUser(token, payload);

@@ -165,6 +165,7 @@ export interface PortalUserListParams {
 }
 
 export interface PortalUserCreateInput {
+  tenant_id?: string | null;
   username?: string | null;
   full_name: string;
   email?: string | null;
