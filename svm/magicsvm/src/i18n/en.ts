@@ -262,6 +262,73 @@ export default {
         deactivateFailed: 'Company deactivate failed',
       },
     },
+    contactTypes: {
+      title: 'Contact Types',
+      searchPlaceholder: 'Search contact types...',
+      createLabel: 'New Contact Type',
+      drawerTitle: 'Contact Type',
+      columns: {
+        name: 'Name',
+        description: 'Description',
+        createdAt: 'Created At',
+      },
+      fields: {
+        name: 'Name',
+        description: 'Description',
+        isActive: 'Active',
+      },
+      filters: {
+        all: 'All',
+        active: 'Active',
+        inactive: 'Inactive',
+      },
+      validation: {
+        nameRequired: 'Name is required.',
+      },
+      delete: {
+        title: 'Delete Contact Type',
+        description: 'Are you sure you want to delete "{{name}}"? This action cannot be undone.',
+      },
+    },
+    contacts: {
+      title: 'Contacts',
+      searchPlaceholder: 'Search by name, email or phone...',
+      createLabel: 'New Contact',
+      drawerTitle: 'Contact',
+      columns: {
+        fullName: 'Full Name',
+        email: 'Email',
+        phone: 'Phone',
+        company: 'Company',
+        contactType: 'Contact Type',
+        status: 'Status',
+        createdAt: 'Created At',
+      },
+      fields: {
+        fullName: 'Full Name',
+        email: 'Email',
+        phone: 'Phone',
+        company: 'Company',
+        contactType: 'Contact Type',
+        status: 'Status',
+        notes: 'Notes',
+      },
+      filters: {
+        allCompanies: 'All Companies',
+        allTypes: 'All Contact Types',
+      },
+      validation: {
+        fullNameRequired: 'Full name is required.',
+        emailInvalid: 'Invalid email address.',
+        phoneRequired: 'Phone is required.',
+        companyRequired: 'Company is required.',
+        contactTypeRequired: 'Contact type is required.',
+      },
+      delete: {
+        title: 'Delete Contact',
+        description: 'Are you sure you want to delete "{{name}}"? This action cannot be undone.',
+      },
+    },
     portalUsers: {
       title: 'Portal Users',
       searchPlaceholder: 'Search username, name or email...',

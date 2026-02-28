@@ -262,6 +262,73 @@ export default {
         deactivateFailed: 'Sirket passiv edile bilmedi',
       },
     },
+    contactTypes: {
+      title: 'Əlaqə Növləri',
+      searchPlaceholder: 'Əlaqə növü axtar...',
+      createLabel: 'Yeni Əlaqə Növü',
+      drawerTitle: 'Əlaqə Növü',
+      columns: {
+        name: 'Ad',
+        description: 'Açıqlama',
+        createdAt: 'Yaradılma Tarixi',
+      },
+      fields: {
+        name: 'Ad',
+        description: 'Açıqlama',
+        isActive: 'Aktiv',
+      },
+      filters: {
+        all: 'Hamısı',
+        active: 'Aktiv',
+        inactive: 'Passiv',
+      },
+      validation: {
+        nameRequired: 'Ad tələb olunur.',
+      },
+      delete: {
+        title: 'Əlaqə Növünü Sil',
+        description: '"{{name}}" qeydini silmək istədiyinizə əminsiniz? Bu əməliyyat geri qaytarılmır.',
+      },
+    },
+    contacts: {
+      title: 'Əlaqələr',
+      searchPlaceholder: 'Ad, e-poçt və ya telefon ilə axtar...',
+      createLabel: 'Yeni Əlaqə',
+      drawerTitle: 'Əlaqə',
+      columns: {
+        fullName: 'Ad Soyad',
+        email: 'E-poçt',
+        phone: 'Telefon',
+        company: 'Şirkət',
+        contactType: 'Əlaqə Növü',
+        status: 'Status',
+        createdAt: 'Yaradılma Tarixi',
+      },
+      fields: {
+        fullName: 'Ad Soyad',
+        email: 'E-poçt',
+        phone: 'Telefon',
+        company: 'Şirkət',
+        contactType: 'Əlaqə Növü',
+        status: 'Status',
+        notes: 'Qeydlər',
+      },
+      filters: {
+        allCompanies: 'Bütün Şirkətlər',
+        allTypes: 'Bütün Əlaqə Növləri',
+      },
+      validation: {
+        fullNameRequired: 'Ad soyad tələb olunur.',
+        emailInvalid: 'Etibarsız e-poçt ünvanı.',
+        phoneRequired: 'Telefon tələb olunur.',
+        companyRequired: 'Şirkət seçimi tələb olunur.',
+        contactTypeRequired: 'Əlaqə növü seçimi tələb olunur.',
+      },
+      delete: {
+        title: 'Əlaqəni Sil',
+        description: '"{{name}}" qeydini silmək istədiyinizə əminsiniz? Bu əməliyyat geri qaytarılmır.',
+      },
+    },
     portalUsers: {
       title: 'Portal Istifadecileri',
       searchPlaceholder: 'Istifadeci adi, ad soyad ve ya e-poct axtar...',

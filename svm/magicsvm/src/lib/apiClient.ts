@@ -217,6 +217,79 @@ export interface PermissionCatalogApiItem {
   deprecated?: boolean | null;
 }
 
+export interface ContactTypeApiItem {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactTypeListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  isActive?: boolean;
+}
+
+export interface ContactTypeCreateInput {
+  tenant_id?: string | null;
+  name: string;
+  description?: string | null;
+  is_active?: boolean;
+}
+
+export interface ContactTypeUpdateInput {
+  name?: string;
+  description?: string | null;
+  is_active?: boolean;
+}
+
+export interface ContactApiItem {
+  id: string;
+  tenant_id: string;
+  company_id: string;
+  contact_type_id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  companyId?: string;
+  contactTypeId?: string;
+}
+
+export interface ContactCreateInput {
+  tenant_id?: string | null;
+  company_id: string;
+  contact_type_id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_primary?: boolean;
+}
+
+export interface ContactUpdateInput {
+  company_id?: string;
+  contact_type_id?: string;
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_primary?: boolean;
+}
+
 type RequestMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
 interface RequestOptions {
@@ -675,4 +748,181 @@ export async function listAdminPermissionCatalog(
       token: accessToken,
     },
   );
+}
+
+export async function listContactTypes(
+  accessToken: string,
+  params: ContactTypeListParams = {},
+): Promise<PaginatedResponse<ContactTypeApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (typeof params.isActive === "boolean") {
+    query.set("is_active", String(params.isActive));
+  }
+  return request<PaginatedResponse<ContactTypeApiItem>>(`/api/v1/contact-types?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getContactType(accessToken: string, contactTypeId: string): Promise<ContactTypeApiItem> {
+  return request<ContactTypeApiItem>(`/api/v1/contact-types/${contactTypeId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createContactType(
+  accessToken: string,
+  payload: ContactTypeCreateInput,
+): Promise<ContactTypeApiItem> {
+  return request<ContactTypeApiItem>("/api/v1/contact-types", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateContactType(
+  accessToken: string,
+  contactTypeId: string,
+  payload: ContactTypeUpdateInput,
+): Promise<ContactTypeApiItem> {
+  return request<ContactTypeApiItem>(`/api/v1/contact-types/${contactTypeId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteContactType(accessToken: string, contactTypeId: string): Promise<void> {
+  await request<null>(`/api/v1/contact-types/${contactTypeId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function exportContactTypesCsv(
+  accessToken: string,
+  params: Omit<ContactTypeListParams, "page" | "pageSize"> = {},
+): Promise<void> {
+  const query = new URLSearchParams();
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (typeof params.isActive === "boolean") {
+    query.set("is_active", String(params.isActive));
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/contact-types/export?${query.toString()}`), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "text/csv",
+    },
+  });
+  if (!response.ok) {
+    const payload = await parseJson(response);
+    throw normalizeError(response.status, payload, response.headers.get("x-request-id"));
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "contact-types.csv";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function listContacts(
+  accessToken: string,
+  params: ContactListParams = {},
+): Promise<PaginatedResponse<ContactApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.companyId) {
+    query.set("company_id", params.companyId);
+  }
+  if (params.contactTypeId) {
+    query.set("contact_type_id", params.contactTypeId);
+  }
+  return request<PaginatedResponse<ContactApiItem>>(`/api/v1/contacts?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getContact(accessToken: string, contactId: string): Promise<ContactApiItem> {
+  return request<ContactApiItem>(`/api/v1/contacts/${contactId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createContact(accessToken: string, payload: ContactCreateInput): Promise<ContactApiItem> {
+  return request<ContactApiItem>("/api/v1/contacts", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateContact(
+  accessToken: string,
+  contactId: string,
+  payload: ContactUpdateInput,
+): Promise<ContactApiItem> {
+  return request<ContactApiItem>(`/api/v1/contacts/${contactId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteContact(accessToken: string, contactId: string): Promise<void> {
+  await request<null>(`/api/v1/contacts/${contactId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function exportContactsCsv(
+  accessToken: string,
+  params: Omit<ContactListParams, "page" | "pageSize"> = {},
+): Promise<void> {
+  const query = new URLSearchParams();
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.companyId) {
+    query.set("company_id", params.companyId);
+  }
+  if (params.contactTypeId) {
+    query.set("contact_type_id", params.contactTypeId);
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/contacts/export?${query.toString()}`), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "text/csv",
+    },
+  });
+  if (!response.ok) {
+    const payload = await parseJson(response);
+    throw normalizeError(response.status, payload, response.headers.get("x-request-id"));
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "contacts.csv";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
 }

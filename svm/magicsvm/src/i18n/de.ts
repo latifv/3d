@@ -262,6 +262,73 @@ export default {
         deactivateFailed: 'Unternehmen konnte nicht deaktiviert werden',
       },
     },
+    contactTypes: {
+      title: 'Kontaktarten',
+      searchPlaceholder: 'Kontaktart suchen...',
+      createLabel: 'Neue Kontaktart',
+      drawerTitle: 'Kontaktart',
+      columns: {
+        name: 'Name',
+        description: 'Beschreibung',
+        createdAt: 'Erstellt am',
+      },
+      fields: {
+        name: 'Name',
+        description: 'Beschreibung',
+        isActive: 'Aktiv',
+      },
+      filters: {
+        all: 'Alle',
+        active: 'Aktiv',
+        inactive: 'Inaktiv',
+      },
+      validation: {
+        nameRequired: 'Name ist erforderlich.',
+      },
+      delete: {
+        title: 'Kontaktart löschen',
+        description: 'Möchten Sie "{{name}}" wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.',
+      },
+    },
+    contacts: {
+      title: 'Kontakte',
+      searchPlaceholder: 'Nach Name, E-Mail oder Telefon suchen...',
+      createLabel: 'Neuer Kontakt',
+      drawerTitle: 'Kontakt',
+      columns: {
+        fullName: 'Vollständiger Name',
+        email: 'E-Mail',
+        phone: 'Telefon',
+        company: 'Firma',
+        contactType: 'Kontaktart',
+        status: 'Status',
+        createdAt: 'Erstellt am',
+      },
+      fields: {
+        fullName: 'Vollständiger Name',
+        email: 'E-Mail',
+        phone: 'Telefon',
+        company: 'Firma',
+        contactType: 'Kontaktart',
+        status: 'Status',
+        notes: 'Notizen',
+      },
+      filters: {
+        allCompanies: 'Alle Firmen',
+        allTypes: 'Alle Kontaktarten',
+      },
+      validation: {
+        fullNameRequired: 'Name ist erforderlich.',
+        emailInvalid: 'Ungültige E-Mail-Adresse.',
+        phoneRequired: 'Telefon ist erforderlich.',
+        companyRequired: 'Firma ist erforderlich.',
+        contactTypeRequired: 'Kontaktart ist erforderlich.',
+      },
+      delete: {
+        title: 'Kontakt löschen',
+        description: 'Möchten Sie "{{name}}" wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.',
+      },
+    },
     portalUsers: {
       title: 'Portal-Benutzer',
       searchPlaceholder: 'Nach Benutzername, Name oder E-Mail suchen...',

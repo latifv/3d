@@ -262,6 +262,73 @@ export default {
         deactivateFailed: 'Sirket pasife alma basarisiz',
       },
     },
+    contactTypes: {
+      title: 'İletişim Tipleri',
+      searchPlaceholder: 'İletişim tipi ara...',
+      createLabel: 'Yeni İletişim Tipi',
+      drawerTitle: 'İletişim Tipi',
+      columns: {
+        name: 'Ad',
+        description: 'Açıklama',
+        createdAt: 'Oluşturulma',
+      },
+      fields: {
+        name: 'Ad',
+        description: 'Açıklama',
+        isActive: 'Aktif',
+      },
+      filters: {
+        all: 'Tümü',
+        active: 'Aktif',
+        inactive: 'Pasif',
+      },
+      validation: {
+        nameRequired: 'Ad zorunludur.',
+      },
+      delete: {
+        title: 'İletişim Tipini Sil',
+        description: '"{{name}}" kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+      },
+    },
+    contacts: {
+      title: 'Kişiler',
+      searchPlaceholder: 'Ad, e-posta veya telefon ile ara...',
+      createLabel: 'Yeni Kişi',
+      drawerTitle: 'Kişi',
+      columns: {
+        fullName: 'Ad Soyad',
+        email: 'E-posta',
+        phone: 'Telefon',
+        company: 'Şirket',
+        contactType: 'İletişim Tipi',
+        status: 'Durum',
+        createdAt: 'Oluşturulma',
+      },
+      fields: {
+        fullName: 'Ad Soyad',
+        email: 'E-posta',
+        phone: 'Telefon',
+        company: 'Şirket',
+        contactType: 'İletişim Tipi',
+        status: 'Durum',
+        notes: 'Notlar',
+      },
+      filters: {
+        allCompanies: 'Tüm Şirketler',
+        allTypes: 'Tüm İletişim Tipleri',
+      },
+      validation: {
+        fullNameRequired: 'Ad soyad zorunludur.',
+        emailInvalid: 'Geçersiz e-posta adresi.',
+        phoneRequired: 'Telefon zorunludur.',
+        companyRequired: 'Şirket seçimi zorunludur.',
+        contactTypeRequired: 'İletişim tipi seçimi zorunludur.',
+      },
+      delete: {
+        title: 'Kişiyi Sil',
+        description: '"{{name}}" kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+      },
+    },
     portalUsers: {
       title: 'Portal Kullanicilari',
       searchPlaceholder: 'Kullanici adi, ad-soyad veya e-posta ara...',
