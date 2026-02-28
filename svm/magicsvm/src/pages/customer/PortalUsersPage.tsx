@@ -62,9 +62,10 @@ const emptyDefaults = {
 };
 
 function mapPortalUser(item: PortalUserApiItem): PortalUserRow {
+  const fallbackUsername = item.email ? item.email.split("@", 1)[0] : "";
   return {
     id: item.id,
-    username: item.username ?? "",
+    username: item.username ?? fallbackUsername,
     full_name: item.full_name,
     email: item.email ?? "",
     company_id: item.company_id ?? "",
