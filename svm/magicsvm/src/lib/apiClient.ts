@@ -155,6 +155,15 @@ export interface PermissionApiItem {
   key: string;
 }
 
+export interface PermissionCatalogApiItem {
+  key: string;
+  groupKey: string;
+  labelKey: string;
+  descriptionKey: string;
+  risk?: "LOW" | "MEDIUM" | "HIGH" | null;
+  deprecated?: boolean | null;
+}
+
 type RequestMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
 interface RequestOptions {
@@ -489,6 +498,19 @@ export async function listPermissions(
 ): Promise<PaginatedResponse<PermissionApiItem>> {
   return request<PaginatedResponse<PermissionApiItem>>(
     `/api/v1/permissions?page=${page}&page_size=${pageSize}`,
+    {
+      token: accessToken,
+    },
+  );
+}
+
+export async function listAdminPermissionCatalog(
+  accessToken: string,
+  page = 1,
+  pageSize = 100,
+): Promise<PaginatedResponse<PermissionCatalogApiItem>> {
+  return request<PaginatedResponse<PermissionCatalogApiItem>>(
+    `/api/v1/admin/iam/permissions?page=${page}&page_size=${pageSize}`,
     {
       token: accessToken,
     },

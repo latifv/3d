@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { Copy, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { EntityPage } from "@/components/shared/EntityPage";
 import { RowActions } from "@/components/shared/RowActions";
@@ -21,10 +21,12 @@ import {
   ApiRequestError,
   createRole,
   deleteRole,
+  listAdminPermissionCatalog,
   listPermissions,
   listRoles,
   updateRole,
   type PermissionApiItem,
+  type PermissionCatalogApiItem,
   type RoleApiItem,
   type RoleCreateInput,
 } from "@/lib/apiClient";
@@ -33,7 +35,6 @@ import { useAuth } from "@/hooks/useAuth";
 
 type DrawerMode = "create" | "edit" | "view";
 type RoleStatus = "ACTIVE" | "DISABLED";
-
 type RoleScope = "GLOBAL" | "TENANT" | "DISABLED";
 
 interface RoleRow {
@@ -57,8 +58,9 @@ interface RoleFormState {
 
 interface PermissionGroup {
   key: string;
+  groupKey: string;
   label: string;
-  items: PermissionApiItem[];
+  items: PermissionCatalogApiItem[];
 }
 
 const SYSTEM_ROLE_KEYS = new Set([
@@ -115,14 +117,38 @@ function extractError(error: unknown): { message: string; requestId?: string | n
   return { message: "Unexpected error" };
 }
 
-function getPermissionGroupKey(permissionKey: string): string {
-  if (permissionKey.includes(".")) {
-    return permissionKey.split(".")[0].toLowerCase();
+function humanizeSegment(value: string): string {
+  return value
+    .replace(/[_\.]+/g, " ")
+    .replace(/\b\w/g, (ch) => ch.toUpperCase())
+    .trim();
+}
+
+function parsePermissionKey(permissionKey: string): { resource: string; action: string } {
+  const [resource = "general", action = "read"] = permissionKey.split(".");
+  return { resource, action };
+}
+
+function fallbackRisk(permissionKey: string): "LOW" | "MEDIUM" | "HIGH" {
+  const action = permissionKey.split(".").slice(-1)[0]?.toLowerCase() ?? "read";
+  if (["write", "delete", "revoke", "decide", "pause"].includes(action)) {
+    return "HIGH";
   }
-  if (permissionKey.includes("_")) {
-    return permissionKey.split("_")[0].toLowerCase();
+  if (["request", "run", "submit", "check"].includes(action)) {
+    return "MEDIUM";
   }
-  return "general";
+  return "LOW";
+}
+
+function mapLegacyPermission(item: PermissionApiItem): PermissionCatalogApiItem {
+  return {
+    key: item.key,
+    groupKey: `permissions.group.${item.key.split(".")[0] ?? "general"}`,
+    labelKey: `permissions.${item.key}.label`,
+    descriptionKey: `permissions.${item.key}.desc`,
+    risk: fallbackRisk(item.key),
+    deprecated: false,
+  };
 }
 
 export default function RolesPage() {
@@ -132,7 +158,7 @@ export default function RolesPage() {
   const canWrite = hasAnyPermission(["platform.iam.roles.write", "iam.roles.write", "roles.write"]);
 
   const [roles, setRoles] = useState<RoleRow[]>([]);
-  const [permissions, setPermissions] = useState<PermissionApiItem[]>([]);
+  const [permissions, setPermissions] = useState<PermissionCatalogApiItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -152,17 +178,46 @@ export default function RolesPage() {
   const withRequestId = (message: string, requestId?: string | null) =>
     requestId ? `${message} (${t("common.requestId")}: ${requestId})` : message;
 
+  const getPermissionTitle = (permission: PermissionCatalogApiItem): string => {
+    const parsed = parsePermissionKey(permission.key);
+    const resourceLabel = t(`permissions.resources.${parsed.resource}`, humanizeSegment(parsed.resource));
+    const actionLabel = t(`permissions.actions.${parsed.action}`, humanizeSegment(parsed.action));
+    return t(permission.labelKey, {
+      resource: resourceLabel,
+      action: actionLabel,
+      defaultValue: `${resourceLabel} - ${actionLabel}`,
+    });
+  };
+
+  const getPermissionDescription = (permission: PermissionCatalogApiItem): string => {
+    const parsed = parsePermissionKey(permission.key);
+    const resourceLabel = t(`permissions.resources.${parsed.resource}`, humanizeSegment(parsed.resource));
+    const actionLabel = t(`permissions.actions.${parsed.action}`, humanizeSegment(parsed.action));
+    return t(permission.descriptionKey, {
+      resource: resourceLabel,
+      action: actionLabel,
+      defaultValue: t("permissions.generated.desc", {
+        resource: resourceLabel,
+        action: actionLabel,
+        defaultValue: `${resourceLabel} ${actionLabel}`,
+      }),
+    });
+  };
+
   const groupedPermissions = useMemo<PermissionGroup[]>(() => {
+    const q = permissionQuery.trim().toLowerCase();
     const filtered = permissions.filter((item) => {
-      if (!permissionQuery.trim()) {
+      if (!q) {
         return true;
       }
-      return item.key.toLowerCase().includes(permissionQuery.trim().toLowerCase());
+      const title = getPermissionTitle(item).toLowerCase();
+      const description = getPermissionDescription(item).toLowerCase();
+      return item.key.toLowerCase().includes(q) || title.includes(q) || description.includes(q);
     });
 
-    const groups = new Map<string, PermissionApiItem[]>();
+    const groups = new Map<string, PermissionCatalogApiItem[]>();
     for (const item of filtered) {
-      const key = getPermissionGroupKey(item.key);
+      const key = item.groupKey || `permissions.group.${item.key.split(".")[0] ?? "general"}`;
       if (!groups.has(key)) {
         groups.set(key, []);
       }
@@ -173,15 +228,31 @@ export default function RolesPage() {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([groupKey, items]) => ({
         key: groupKey,
-        label: t(`pages.roles.permissionGroups.${groupKey}`, groupKey.toUpperCase()),
+        groupKey,
+        label: t(groupKey, humanizeSegment(groupKey.replace("permissions.group.", ""))),
         items: [...items].sort((a, b) => a.key.localeCompare(b.key)),
       }));
-  }, [permissionQuery, permissions, t]);
+  }, [permissionQuery, permissions]);
 
   const selectedCount = form.permissionKeys.length;
   const isView = drawerMode === "view";
   const roleKeyValue = useMemo(() => deriveRoleKey(form.name), [form.name]);
   const isSystemRole = selectedRole?.isSystemRole ?? false;
+
+  const copyPermissionKey = async (permissionKey: string) => {
+    try {
+      await navigator.clipboard.writeText(permissionKey);
+      toast({
+        title: t("permissions.copySuccess"),
+        description: permissionKey,
+      });
+    } catch {
+      toast({
+        title: t("permissions.copyFailed"),
+        variant: "destructive",
+      });
+    }
+  };
 
   const load = async () => {
     const token = getAccessToken();
@@ -193,12 +264,25 @@ export default function RolesPage() {
 
     setLoading(true);
     try {
-      const [rolesResponse, permissionsResponse] = await Promise.all([
-        listRoles(token, 1, 100),
-        listPermissions(token, 1, 100),
-      ]);
+      const rolesPromise = listRoles(token, 1, 100);
+      const permissionPromise = listAdminPermissionCatalog(token, 1, 100).catch(async (error) => {
+        if (error instanceof ApiRequestError && [404, 405].includes(error.status)) {
+          const legacy = await listPermissions(token, 1, 100);
+          return {
+            ...legacy,
+            items: legacy.items.map(mapLegacyPermission),
+          };
+        }
+        throw error;
+      });
+
+      const [rolesResponse, permissionsResponse] = await Promise.all([rolesPromise, permissionPromise]);
       setRoles((rolesResponse.items ?? []).map(mapRole));
-      setPermissions(permissionsResponse.items ?? []);
+      setPermissions((permissionsResponse.items ?? []).map((item) => ({
+        ...item,
+        risk: item.risk ?? fallbackRisk(item.key),
+        deprecated: item.deprecated ?? false,
+      })));
     } catch (error) {
       const parsed = extractError(error);
       toast({
@@ -527,9 +611,7 @@ export default function RolesPage() {
               <div className="px-6 py-4">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-medium">{t("permissions.title")}</p>
-                  <Badge variant="secondary">
-                    {t("permissions.selectedCount", { count: selectedCount })}
-                  </Badge>
+                  <Badge variant="secondary">{t("permissions.selectedCount", { count: selectedCount })}</Badge>
                 </div>
 
                 <div className="relative mb-3">
@@ -552,14 +634,18 @@ export default function RolesPage() {
                 ) : (
                   <Accordion type="multiple" className="w-full">
                     {groupedPermissions.map((group) => {
-                      const groupSelectedCount = group.items.filter((item) =>
-                        form.permissionKeys.includes(item.key),
-                      ).length;
+                      const groupSelectedCount = group.items.filter((item) => form.permissionKeys.includes(item.key)).length;
+                      const allInGroup = groupSelectedCount === group.items.length;
 
                       return (
                         <AccordionItem key={group.key} value={group.key}>
                           <div className="flex items-center justify-between gap-2 py-2">
-                            <AccordionTrigger className="py-0 text-sm font-medium">{group.label}</AccordionTrigger>
+                            <AccordionTrigger className="py-0 text-sm font-medium">
+                              <span>{group.label}</span>
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                {t("permissions.groupSelected", { selected: groupSelectedCount, total: group.items.length })}
+                              </span>
+                            </AccordionTrigger>
                             <Button
                               type="button"
                               variant="ghost"
@@ -569,7 +655,7 @@ export default function RolesPage() {
                               onClick={(event) => {
                                 event.preventDefault();
                                 event.stopPropagation();
-                                togglePermissionGroup(group, groupSelectedCount !== group.items.length);
+                                togglePermissionGroup(group, !allInGroup);
                               }}
                             >
                               {t("permissions.selectAllInGroup")}
@@ -578,18 +664,43 @@ export default function RolesPage() {
                           <AccordionContent className="space-y-2 pt-1">
                             {group.items.map((permission) => {
                               const checked = form.permissionKeys.includes(permission.key);
+                              const title = getPermissionTitle(permission);
+                              const description = getPermissionDescription(permission);
+                              const riskValue = permission.risk ?? fallbackRisk(permission.key);
+
                               return (
-                                <label
-                                  key={permission.id}
-                                  className="flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2 text-sm"
-                                >
+                                <div key={permission.key} className="flex items-start gap-3 rounded-md border px-3 py-2">
                                   <Checkbox
                                     checked={checked}
                                     onCheckedChange={(next) => togglePermission(permission.key, !!next)}
                                     disabled={isView}
+                                    className="mt-1"
                                   />
-                                  <span className="font-mono text-xs">{permission.key}</span>
-                                </label>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-semibold leading-tight">{title}</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-2">
+                                    <Badge variant="outline" className="text-[10px]">
+                                      {t(`permissions.risk.${riskValue.toLowerCase()}`, riskValue)}
+                                    </Badge>
+                                    {permission.deprecated ? (
+                                      <Badge variant="secondary" className="text-[10px]">
+                                        {t("permissions.deprecated")}
+                                      </Badge>
+                                    ) : null}
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 gap-1 px-2"
+                                      onClick={() => void copyPermissionKey(permission.key)}
+                                    >
+                                      <span className="font-mono text-[10px]">{permission.key}</span>
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
                               );
                             })}
                           </AccordionContent>
