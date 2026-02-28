@@ -5,7 +5,6 @@ import {
   BellRing,
   Building2,
   CheckCircle,
-  Cog,
   Contact,
   Copy,
   Database,
@@ -32,7 +31,6 @@ import {
   Shield,
   ShieldCheck,
   Tag,
-  Upload,
   UserCircle,
   Users,
   Zap,
@@ -65,11 +63,10 @@ const BASE_GROUPS: NavGroup[] = [
   {
     label: "Operations",
     groupKey: "menu.group.operations",
-    collapsible: false,
+    collapsible: true,
     defaultOpen: true,
     items: [
       { label: "Dashboard", labelKey: "menu.dashboard", path: "/dashboard", icon: LayoutDashboard },
-      { label: "Operations", labelKey: "menu.operations", path: "/admin/operations", icon: Cog, requiredPermissions: ["operations.read"] },
       { label: "Events / Timeline", labelKey: "menu.eventsTimeline", path: "/admin/system-events", icon: Zap, requiredPermissions: ["events.read"] },
       {
         label: "Portal Activities",
@@ -91,25 +88,16 @@ const BASE_GROUPS: NavGroup[] = [
       { label: "Virtual Machines", labelKey: "menu.virtualMachines", path: "/infrastructure/vms", icon: Monitor, requiredPermissions: ["vms.read"] },
       { label: "VM Templates", labelKey: "menu.vmTemplates", path: "/infrastructure/templates", icon: Layers, requiredPermissions: ["vms.read"] },
       { label: "VM Bulk Create", labelKey: "menu.vmBulkCreate", path: "/infrastructure/bulk-operations", icon: Copy, requiredPermissions: ["vms.write"] },
-      { label: "ISO Management", labelKey: "menu.isoManagement", path: "/infrastructure/iso-images", icon: Upload, requiredPermissions: ["isos.read"] },
+    ],
+  },
+  {
+    label: "Protection",
+    groupKey: "menu.group.protection",
+    collapsible: true,
+    defaultOpen: true,
+    items: [
       { label: "Backup Policies", labelKey: "menu.backupPolicies", path: "/backup/policies", icon: Database, requiredPermissions: ["backup_policies.read"] },
       { label: "Backup Runs", labelKey: "menu.backupRuns", path: "/backup/runs", icon: PlayCircle, requiredPermissions: ["backup_runs.read"] },
-      {
-        label: "Monitoring",
-        labelKey: "menu.monitoring",
-        path: "/monitoring/metrics",
-        icon: LineChart,
-        requiredPermissions: ["monitoring.read"],
-        featureFlag: "FEATURE_MONITORING",
-      },
-      {
-        label: "Alerts",
-        labelKey: "menu.alerts",
-        path: "/monitoring/alerts",
-        icon: Bell,
-        requiredPermissions: ["monitoring.read"],
-        featureFlag: "FEATURE_ALERTS",
-      },
       {
         label: "DR Status",
         labelKey: "menu.drStatus",
@@ -129,8 +117,32 @@ const BASE_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Customers",
-    groupKey: "menu.group.customers",
+    label: "Observability",
+    groupKey: "menu.group.observability",
+    collapsible: true,
+    defaultOpen: true,
+    items: [
+      {
+        label: "Monitoring",
+        labelKey: "menu.monitoring",
+        path: "/monitoring/metrics",
+        icon: LineChart,
+        requiredPermissions: ["monitoring.read"],
+        featureFlag: "FEATURE_MONITORING",
+      },
+      {
+        label: "Alerts",
+        labelKey: "menu.alerts",
+        path: "/monitoring/alerts",
+        icon: Bell,
+        requiredPermissions: ["monitoring.read"],
+        featureFlag: "FEATURE_ALERTS",
+      },
+    ],
+  },
+  {
+    label: "Org & Customer",
+    groupKey: "menu.group.orgCustomer",
     collapsible: true,
     defaultOpen: false,
     items: [
@@ -143,8 +155,8 @@ const BASE_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Integrations",
-    groupKey: "menu.group.integrations",
+    label: "Providers & Access",
+    groupKey: "menu.group.providersAccess",
     collapsible: true,
     defaultOpen: false,
     items: [
@@ -204,14 +216,6 @@ const BASE_GROUPS: NavGroup[] = [
         requiredPermissions: ["backup_reporters.read"],
         featureFlag: "FEATURE_INTEGRATIONS_HUB",
       },
-      {
-        label: "Notifications",
-        labelKey: "menu.notifications",
-        path: "/admin/notifications",
-        icon: BellRing,
-        requiredPermissions: ["notifications.read"],
-        featureFlag: "FEATURE_INTEGRATIONS_HUB",
-      },
     ],
   },
   {
@@ -245,10 +249,17 @@ const BASE_GROUPS: NavGroup[] = [
       { label: "Quotas", labelKey: "menu.quotas", path: "/admin/quotas", icon: Gauge, requiredPermissions: ["quotas.read"] },
       { label: "Approval Policies", labelKey: "menu.approvalPolicies", path: "/admin/approval-policies", icon: CheckCircle, requiredPermissions: ["approvals.read"] },
       { label: "Notifications", labelKey: "menu.notifications", path: "/admin/notifications", icon: BellRing, requiredPermissions: ["notifications.read"] },
-      { label: "Backup Reporters", labelKey: "menu.backupReporters", path: "/admin/backup-reporters", icon: FileBarChart, requiredPermissions: ["backup_reporters.read"] },
+      { label: "General", labelKey: "menu.general", path: "/admin/general-settings", icon: Settings, requiredPermissions: ["preferences.write"] },
+    ],
+  },
+  {
+    label: "Audit & Compliance",
+    groupKey: "menu.group.auditCompliance",
+    collapsible: true,
+    defaultOpen: false,
+    items: [
       { label: "Audit Logs", labelKey: "menu.auditLogs", path: "/monitoring/audit-logs", icon: FileText, requiredPermissions: ["audit_logs.read"] },
       { label: "Audit Export", labelKey: "menu.auditExport", path: "/admin/audit-export", icon: Download, requiredPermissions: ["audit_logs.read"] },
-      { label: "General", labelKey: "menu.general", path: "/admin/general-settings", icon: Settings, requiredPermissions: ["preferences.write"] },
     ],
   },
 ];
