@@ -192,7 +192,7 @@ export default function PortalUsersPage() {
     requestId ? `${message} (${t("common.requestId")}: ${requestId})` : message;
 
   const loadLookups = async (token: string) => {
-    const [companyResponse, roleResponse] = await Promise.all([listCompanies(token), listRoles(token, 1, 200)]);
+    const [companyResponse, roleResponse] = await Promise.all([listCompanies(token), listRoles(token, 1, 100)]);
     setCompanies(companyResponse.items);
     setRoles(roleResponse.items);
   };
