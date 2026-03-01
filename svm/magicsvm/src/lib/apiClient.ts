@@ -130,6 +130,138 @@ export interface ProjectUpdateInput {
   metadata?: Record<string, unknown> | null;
 }
 
+export interface DatacenterApiItem {
+  id: string;
+  code: string;
+  notes: string | null;
+  status: "ACTIVE" | "PASSIVE";
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatacenterListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  status?: "ACTIVE" | "PASSIVE";
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
+export interface DatacenterCreateInput {
+  code: string;
+  notes?: string | null;
+  status?: "ACTIVE" | "PASSIVE";
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface DatacenterUpdateInput {
+  code?: string;
+  notes?: string | null;
+  status?: "ACTIVE" | "PASSIVE";
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface ServiceAccessApiItem {
+  id: string;
+  datacenter_id: string;
+  service_type: "VCENTER" | "NUTANIX" | "NETBACKUP" | "MONITORING";
+  base_url: string;
+  credential_ref: string;
+  status: "ACTIVE" | "PASSIVE";
+  health_status: "UNKNOWN" | "UP" | "DOWN";
+  last_health_check_at: string | null;
+  timeout_seconds: number;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ServiceAccessListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  status?: "ACTIVE" | "PASSIVE";
+  serviceType?: "VCENTER" | "NUTANIX" | "NETBACKUP" | "MONITORING";
+  datacenterId?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
+export interface ServiceAccessCreateInput {
+  datacenter_id: string;
+  service_type: "VCENTER" | "NUTANIX" | "NETBACKUP" | "MONITORING";
+  base_url: string;
+  credential_ref: string;
+  status?: "ACTIVE" | "PASSIVE";
+  timeout_seconds?: number;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface ServiceAccessUpdateInput {
+  datacenter_id?: string;
+  service_type?: "VCENTER" | "NUTANIX" | "NETBACKUP" | "MONITORING";
+  base_url?: string;
+  credential_ref?: string;
+  status?: "ACTIVE" | "PASSIVE";
+  timeout_seconds?: number;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface PortalUserCompanyRef {
+  id: string;
+  name: string;
+}
+
+export interface PortalUserApiItem {
+  id: string;
+  tenant_id: string;
+  company_id: string | null;
+  company: PortalUserCompanyRef | null;
+  auth_user_id: string | null;
+  username: string | null;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  role_key: string | null;
+  status: string;
+  last_seen_at: string | null;
+  last_login_at: string | null;
+  login_count: number;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PortalUserListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  status?: string;
+  role?: string;
+  companyId?: string;
+}
+
+export interface PortalUserCreateInput {
+  tenant_id?: string | null;
+  username?: string | null;
+  full_name: string;
+  email?: string | null;
+  company_id: string;
+  role_key: string;
+  status?: "PENDING" | "ACTIVE" | "SUSPENDED";
+}
+
+export interface PortalUserUpdateInput {
+  username?: string | null;
+  full_name?: string;
+  email?: string | null;
+  company_id?: string;
+  role_key?: string;
+  status?: "PENDING" | "ACTIVE" | "SUSPENDED";
+}
+
 export interface RoleApiItem {
   id: string;
   name: string;
@@ -162,6 +294,79 @@ export interface PermissionCatalogApiItem {
   descriptionKey: string;
   risk?: "LOW" | "MEDIUM" | "HIGH" | null;
   deprecated?: boolean | null;
+}
+
+export interface ContactTypeApiItem {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactTypeListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  isActive?: boolean;
+}
+
+export interface ContactTypeCreateInput {
+  tenant_id?: string | null;
+  name: string;
+  description?: string | null;
+  is_active?: boolean;
+}
+
+export interface ContactTypeUpdateInput {
+  name?: string;
+  description?: string | null;
+  is_active?: boolean;
+}
+
+export interface ContactApiItem {
+  id: string;
+  tenant_id: string;
+  company_id: string;
+  contact_type_id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  companyId?: string;
+  contactTypeId?: string;
+}
+
+export interface ContactCreateInput {
+  tenant_id?: string | null;
+  company_id: string;
+  contact_type_id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_primary?: boolean;
+}
+
+export interface ContactUpdateInput {
+  company_id?: string;
+  contact_type_id?: string;
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_primary?: boolean;
 }
 
 type RequestMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
@@ -424,6 +629,142 @@ export async function listProjects(accessToken: string): Promise<PaginatedRespon
   });
 }
 
+export async function listDatacenters(
+  accessToken: string,
+  params: DatacenterListParams = {},
+): Promise<PaginatedResponse<DatacenterApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.sortBy) {
+    query.set("sort_by", params.sortBy);
+  }
+  if (params.sortDir) {
+    query.set("sort_dir", params.sortDir);
+  }
+  return request<PaginatedResponse<DatacenterApiItem>>(`/api/v1/datacenters?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getDatacenter(accessToken: string, datacenterId: string): Promise<DatacenterApiItem> {
+  return request<DatacenterApiItem>(`/api/v1/datacenters/${datacenterId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createDatacenter(
+  accessToken: string,
+  payload: DatacenterCreateInput,
+): Promise<DatacenterApiItem> {
+  return request<DatacenterApiItem>("/api/v1/datacenters", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateDatacenter(
+  accessToken: string,
+  datacenterId: string,
+  payload: DatacenterUpdateInput,
+): Promise<DatacenterApiItem> {
+  return request<DatacenterApiItem>(`/api/v1/datacenters/${datacenterId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteDatacenter(accessToken: string, datacenterId: string): Promise<void> {
+  await request<null>(`/api/v1/datacenters/${datacenterId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function listServiceAccesses(
+  accessToken: string,
+  params: ServiceAccessListParams = {},
+): Promise<PaginatedResponse<ServiceAccessApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.serviceType) {
+    query.set("service_type", params.serviceType);
+  }
+  if (params.datacenterId) {
+    query.set("datacenter_id", params.datacenterId);
+  }
+  if (params.sortBy) {
+    query.set("sort_by", params.sortBy);
+  }
+  if (params.sortDir) {
+    query.set("sort_dir", params.sortDir);
+  }
+  return request<PaginatedResponse<ServiceAccessApiItem>>(`/api/v1/service-accesses?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getServiceAccess(accessToken: string, serviceAccessId: string): Promise<ServiceAccessApiItem> {
+  return request<ServiceAccessApiItem>(`/api/v1/service-accesses/${serviceAccessId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createServiceAccess(
+  accessToken: string,
+  payload: ServiceAccessCreateInput,
+): Promise<ServiceAccessApiItem> {
+  return request<ServiceAccessApiItem>("/api/v1/service-accesses", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateServiceAccess(
+  accessToken: string,
+  serviceAccessId: string,
+  payload: ServiceAccessUpdateInput,
+): Promise<ServiceAccessApiItem> {
+  return request<ServiceAccessApiItem>(`/api/v1/service-accesses/${serviceAccessId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteServiceAccess(accessToken: string, serviceAccessId: string): Promise<void> {
+  await request<null>(`/api/v1/service-accesses/${serviceAccessId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function healthCheckServiceAccess(
+  accessToken: string,
+  serviceAccessId: string,
+): Promise<ServiceAccessApiItem> {
+  return request<ServiceAccessApiItem>(`/api/v1/service-accesses/${serviceAccessId}/health-check`, {
+    method: "POST",
+    token: accessToken,
+  });
+}
+
 export async function createProject(accessToken: string, payload: ProjectCreateInput): Promise<ProjectApiItem> {
   return request<ProjectApiItem>("/api/v1/projects", {
     method: "POST",
@@ -449,6 +790,113 @@ export async function deleteProject(accessToken: string, projectId: string): Pro
     method: "DELETE",
     token: accessToken,
   });
+}
+
+export async function listPortalUsers(
+  accessToken: string,
+  params: PortalUserListParams = {},
+): Promise<PaginatedResponse<PortalUserApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.role) {
+    query.set("role", params.role);
+  }
+  if (params.companyId) {
+    query.set("company_id", params.companyId);
+  }
+  return request<PaginatedResponse<PortalUserApiItem>>(`/api/v1/portal-users?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getPortalUser(accessToken: string, portalUserId: string): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>(`/api/v1/portal-users/${portalUserId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createPortalUser(
+  accessToken: string,
+  payload: PortalUserCreateInput,
+): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>("/api/v1/portal-users", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updatePortalUser(
+  accessToken: string,
+  portalUserId: string,
+  payload: PortalUserUpdateInput,
+): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>(`/api/v1/portal-users/${portalUserId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function suspendPortalUser(accessToken: string, portalUserId: string): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>(`/api/v1/portal-users/${portalUserId}:suspend`, {
+    method: "POST",
+    token: accessToken,
+  });
+}
+
+export async function activatePortalUser(accessToken: string, portalUserId: string): Promise<PortalUserApiItem> {
+  return request<PortalUserApiItem>(`/api/v1/portal-users/${portalUserId}:activate`, {
+    method: "POST",
+    token: accessToken,
+  });
+}
+
+export async function exportPortalUsersCsv(
+  accessToken: string,
+  params: Omit<PortalUserListParams, "page" | "pageSize"> = {},
+): Promise<void> {
+  const query = new URLSearchParams();
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.role) {
+    query.set("role", params.role);
+  }
+  if (params.companyId) {
+    query.set("company_id", params.companyId);
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/portal-users/export?${query.toString()}`), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "text/csv",
+    },
+  });
+
+  if (!response.ok) {
+    const payload = await parseJson(response);
+    throw normalizeError(response.status, payload, response.headers.get("x-request-id"));
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "portal-users.csv";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
 }
 
 export async function listRoles(
@@ -515,4 +963,181 @@ export async function listAdminPermissionCatalog(
       token: accessToken,
     },
   );
+}
+
+export async function listContactTypes(
+  accessToken: string,
+  params: ContactTypeListParams = {},
+): Promise<PaginatedResponse<ContactTypeApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (typeof params.isActive === "boolean") {
+    query.set("is_active", String(params.isActive));
+  }
+  return request<PaginatedResponse<ContactTypeApiItem>>(`/api/v1/contact-types?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getContactType(accessToken: string, contactTypeId: string): Promise<ContactTypeApiItem> {
+  return request<ContactTypeApiItem>(`/api/v1/contact-types/${contactTypeId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createContactType(
+  accessToken: string,
+  payload: ContactTypeCreateInput,
+): Promise<ContactTypeApiItem> {
+  return request<ContactTypeApiItem>("/api/v1/contact-types", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateContactType(
+  accessToken: string,
+  contactTypeId: string,
+  payload: ContactTypeUpdateInput,
+): Promise<ContactTypeApiItem> {
+  return request<ContactTypeApiItem>(`/api/v1/contact-types/${contactTypeId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteContactType(accessToken: string, contactTypeId: string): Promise<void> {
+  await request<null>(`/api/v1/contact-types/${contactTypeId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function exportContactTypesCsv(
+  accessToken: string,
+  params: Omit<ContactTypeListParams, "page" | "pageSize"> = {},
+): Promise<void> {
+  const query = new URLSearchParams();
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (typeof params.isActive === "boolean") {
+    query.set("is_active", String(params.isActive));
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/contact-types/export?${query.toString()}`), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "text/csv",
+    },
+  });
+  if (!response.ok) {
+    const payload = await parseJson(response);
+    throw normalizeError(response.status, payload, response.headers.get("x-request-id"));
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "contact-types.csv";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function listContacts(
+  accessToken: string,
+  params: ContactListParams = {},
+): Promise<PaginatedResponse<ContactApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.companyId) {
+    query.set("company_id", params.companyId);
+  }
+  if (params.contactTypeId) {
+    query.set("contact_type_id", params.contactTypeId);
+  }
+  return request<PaginatedResponse<ContactApiItem>>(`/api/v1/contacts?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getContact(accessToken: string, contactId: string): Promise<ContactApiItem> {
+  return request<ContactApiItem>(`/api/v1/contacts/${contactId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createContact(accessToken: string, payload: ContactCreateInput): Promise<ContactApiItem> {
+  return request<ContactApiItem>("/api/v1/contacts", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateContact(
+  accessToken: string,
+  contactId: string,
+  payload: ContactUpdateInput,
+): Promise<ContactApiItem> {
+  return request<ContactApiItem>(`/api/v1/contacts/${contactId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteContact(accessToken: string, contactId: string): Promise<void> {
+  await request<null>(`/api/v1/contacts/${contactId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function exportContactsCsv(
+  accessToken: string,
+  params: Omit<ContactListParams, "page" | "pageSize"> = {},
+): Promise<void> {
+  const query = new URLSearchParams();
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.companyId) {
+    query.set("company_id", params.companyId);
+  }
+  if (params.contactTypeId) {
+    query.set("contact_type_id", params.contactTypeId);
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/contacts/export?${query.toString()}`), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "text/csv",
+    },
+  });
+  if (!response.ok) {
+    const payload = await parseJson(response);
+    throw normalizeError(response.status, payload, response.headers.get("x-request-id"));
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "contacts.csv";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
 }
