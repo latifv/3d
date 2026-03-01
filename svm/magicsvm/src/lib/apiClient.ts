@@ -34,6 +34,21 @@ export interface I18nMessagesResponse {
   messages: Record<string, string>;
 }
 
+export interface MfaPolicyApiResponse {
+  tenant_id: string;
+  mfa_enabled: boolean;
+  mfa_methods: string[];
+  mfa_required_roles: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MfaPolicyUpdateInput {
+  mfa_enabled?: boolean;
+  mfa_methods?: string[];
+  mfa_required_roles?: string[];
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   page: number;
@@ -207,6 +222,111 @@ export interface ServiceAccessUpdateInput {
   status?: "ACTIVE" | "PASSIVE";
   timeout_seconds?: number;
   metadata?: Record<string, unknown> | null;
+}
+
+export interface NetworkProviderApiItem {
+  id: string;
+  name: string;
+  vendor: string;
+  endpoint: string;
+  datacenter_id: string | null;
+  datacenter_name?: string | null;
+  status: "ACTIVE" | "PASSIVE";
+  health_status?: "UNKNOWN" | "UP" | "DOWN";
+  last_health_check_at?: string | null;
+  notes?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NetworkProviderListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  status?: "ACTIVE" | "PASSIVE";
+  vendor?: string;
+  datacenterId?: string;
+}
+
+export interface NetworkProviderCreateInput {
+  name: string;
+  vendor: string;
+  endpoint: string;
+  datacenter_id?: string | null;
+  status?: "ACTIVE" | "PASSIVE";
+  notes?: string | null;
+}
+
+export interface NetworkProviderUpdateInput {
+  name?: string;
+  vendor?: string;
+  endpoint?: string;
+  datacenter_id?: string | null;
+  status?: "ACTIVE" | "PASSIVE";
+  notes?: string | null;
+}
+
+export interface ProviderHealthTestResponse {
+  ok: boolean;
+  message: string;
+  latency_ms?: number | null;
+}
+
+export interface MonitoringAccessApiRef {
+  id: string;
+  name: string;
+}
+
+export interface MonitoringAccessProjectRef {
+  id: string;
+  name: string;
+}
+
+export interface MonitoringAccessApiItem {
+  id: string;
+  name: string;
+  provider: MonitoringAccessApiRef;
+  service_access: MonitoringAccessApiRef;
+  scope: "TENANT" | "PROJECT";
+  project: MonitoringAccessProjectRef | null;
+  status: "ACTIVE" | "DISABLED";
+  health: "OK" | "WARNING" | "ERROR" | "UNKNOWN";
+  last_test_at: string | null;
+  last_test_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MonitoringAccessListParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  providerId?: string;
+  serviceAccessId?: string;
+  status?: "ACTIVE" | "DISABLED";
+  scope?: "TENANT" | "PROJECT";
+  projectId?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
+export interface MonitoringAccessCreateInput {
+  name: string;
+  provider_id: string;
+  service_access_id: string;
+  scope: "TENANT" | "PROJECT";
+  project_id?: string | null;
+  status?: "ACTIVE" | "DISABLED";
+}
+
+export interface MonitoringAccessUpdateInput {
+  name?: string;
+  provider_id?: string;
+  service_access_id?: string;
+  scope?: "TENANT" | "PROJECT";
+  project_id?: string | null;
+  status?: "ACTIVE" | "DISABLED";
 }
 
 export interface PortalUserCompanyRef {
@@ -563,6 +683,67 @@ export async function fetchI18nMessages(lang: string): Promise<I18nMessagesRespo
   return request<I18nMessagesResponse>(`/api/v1/i18n/messages?lang=${encodeURIComponent(lang)}`);
 }
 
+export async function fetchApiLiveStatus(timeoutMs = 2500): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(buildUrl("/health/live"), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      return false;
+    }
+
+    const payload = await parseJson(response);
+    const status =
+      typeof payload === "object" &&
+      payload !== null &&
+      "status" in payload &&
+      typeof (payload as { status?: unknown }).status === "string"
+        ? (payload as { status: string }).status
+        : "";
+    return status.toLowerCase() === "ok";
+  } catch {
+    return false;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+export async function getMfaPolicy(
+  accessToken: string,
+  params: { tenantId?: string } = {},
+): Promise<MfaPolicyApiResponse> {
+  const query = new URLSearchParams();
+  if (params.tenantId) {
+    query.set("tenant_id", params.tenantId);
+  }
+  const qs = query.toString();
+  return request<MfaPolicyApiResponse>(`/api/v1/settings/security/mfa-policy${qs ? `?${qs}` : ""}`, {
+    token: accessToken,
+  });
+}
+
+export async function updateMfaPolicy(
+  accessToken: string,
+  payload: MfaPolicyUpdateInput,
+  params: { tenantId?: string } = {},
+): Promise<MfaPolicyApiResponse> {
+  const query = new URLSearchParams();
+  if (params.tenantId) {
+    query.set("tenant_id", params.tenantId);
+  }
+  const qs = query.toString();
+  return request<MfaPolicyApiResponse>(`/api/v1/settings/security/mfa-policy${qs ? `?${qs}` : ""}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
 export async function listTenants(accessToken: string): Promise<PaginatedResponse<TenantApiItem>> {
   return request<PaginatedResponse<TenantApiItem>>("/api/v1/tenants?page=1&page_size=100", {
     token: accessToken,
@@ -763,6 +944,253 @@ export async function healthCheckServiceAccess(
     method: "POST",
     token: accessToken,
   });
+}
+
+export async function listNetworkProviders(
+  accessToken: string,
+  params: NetworkProviderListParams = {},
+): Promise<PaginatedResponse<NetworkProviderApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.vendor) {
+    query.set("vendor", params.vendor);
+  }
+  if (params.datacenterId) {
+    query.set("datacenter_id", params.datacenterId);
+  }
+  return request<PaginatedResponse<NetworkProviderApiItem>>(`/api/v1/providers/network-providers?${query.toString()}`, {
+    token: accessToken,
+  });
+}
+
+export async function getNetworkProvider(
+  accessToken: string,
+  networkProviderId: string,
+): Promise<NetworkProviderApiItem> {
+  return request<NetworkProviderApiItem>(`/api/v1/providers/network-providers/${networkProviderId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createNetworkProvider(
+  accessToken: string,
+  payload: NetworkProviderCreateInput,
+): Promise<NetworkProviderApiItem> {
+  return request<NetworkProviderApiItem>("/api/v1/providers/network-providers", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateNetworkProvider(
+  accessToken: string,
+  networkProviderId: string,
+  payload: NetworkProviderUpdateInput,
+): Promise<NetworkProviderApiItem> {
+  return request<NetworkProviderApiItem>(`/api/v1/providers/network-providers/${networkProviderId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteNetworkProvider(accessToken: string, networkProviderId: string): Promise<void> {
+  await request<null>(`/api/v1/providers/network-providers/${networkProviderId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function testNetworkProvider(
+  accessToken: string,
+  networkProviderId: string,
+): Promise<ProviderHealthTestResponse> {
+  return request<ProviderHealthTestResponse>(`/api/v1/providers/network-providers/${networkProviderId}:test`, {
+    method: "POST",
+    token: accessToken,
+  });
+}
+
+export async function exportNetworkProvidersCsv(
+  accessToken: string,
+  params: Omit<NetworkProviderListParams, "page" | "pageSize"> = {},
+): Promise<void> {
+  const query = new URLSearchParams();
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.vendor) {
+    query.set("vendor", params.vendor);
+  }
+  if (params.datacenterId) {
+    query.set("datacenter_id", params.datacenterId);
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/providers/network-providers/export?${query.toString()}`), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "text/csv",
+    },
+  });
+
+  if (!response.ok) {
+    const payload = await parseJson(response);
+    throw normalizeError(response.status, payload, response.headers.get("x-request-id"));
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "network-providers.csv";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function listMonitoringAccesses(
+  accessToken: string,
+  params: MonitoringAccessListParams = {},
+): Promise<PaginatedResponse<MonitoringAccessApiItem>> {
+  const query = new URLSearchParams();
+  query.set("page", String(params.page ?? 1));
+  query.set("page_size", String(params.pageSize ?? 20));
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.providerId) {
+    query.set("provider_id", params.providerId);
+  }
+  if (params.serviceAccessId) {
+    query.set("service_access_id", params.serviceAccessId);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.scope) {
+    query.set("scope", params.scope);
+  }
+  if (params.projectId) {
+    query.set("project_id", params.projectId);
+  }
+  if (params.sortBy) {
+    query.set("sort_by", params.sortBy);
+  }
+  if (params.sortDir) {
+    query.set("sort_dir", params.sortDir);
+  }
+  return request<PaginatedResponse<MonitoringAccessApiItem>>(
+    `/api/v1/providers/monitoring-accesses?${query.toString()}`,
+    {
+      token: accessToken,
+    },
+  );
+}
+
+export async function getMonitoringAccess(
+  accessToken: string,
+  monitoringAccessId: string,
+): Promise<MonitoringAccessApiItem> {
+  return request<MonitoringAccessApiItem>(`/api/v1/providers/monitoring-accesses/${monitoringAccessId}`, {
+    token: accessToken,
+  });
+}
+
+export async function createMonitoringAccess(
+  accessToken: string,
+  payload: MonitoringAccessCreateInput,
+): Promise<MonitoringAccessApiItem> {
+  return request<MonitoringAccessApiItem>("/api/v1/providers/monitoring-accesses", {
+    method: "POST",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function updateMonitoringAccess(
+  accessToken: string,
+  monitoringAccessId: string,
+  payload: MonitoringAccessUpdateInput,
+): Promise<MonitoringAccessApiItem> {
+  return request<MonitoringAccessApiItem>(`/api/v1/providers/monitoring-accesses/${monitoringAccessId}`, {
+    method: "PATCH",
+    token: accessToken,
+    body: payload,
+  });
+}
+
+export async function deleteMonitoringAccess(accessToken: string, monitoringAccessId: string): Promise<void> {
+  await request<null>(`/api/v1/providers/monitoring-accesses/${monitoringAccessId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function testMonitoringAccess(
+  accessToken: string,
+  monitoringAccessId: string,
+): Promise<ProviderHealthTestResponse> {
+  return request<ProviderHealthTestResponse>(`/api/v1/providers/monitoring-accesses/${monitoringAccessId}:test`, {
+    method: "POST",
+    token: accessToken,
+  });
+}
+
+export async function exportMonitoringAccessesCsv(
+  accessToken: string,
+  params: Omit<MonitoringAccessListParams, "page" | "pageSize"> = {},
+): Promise<void> {
+  const query = new URLSearchParams();
+  if (params.q) {
+    query.set("q", params.q);
+  }
+  if (params.providerId) {
+    query.set("provider_id", params.providerId);
+  }
+  if (params.serviceAccessId) {
+    query.set("service_access_id", params.serviceAccessId);
+  }
+  if (params.status) {
+    query.set("status", params.status);
+  }
+  if (params.scope) {
+    query.set("scope", params.scope);
+  }
+  if (params.projectId) {
+    query.set("project_id", params.projectId);
+  }
+
+  const response = await fetch(buildUrl(`/api/v1/providers/monitoring-accesses/export?${query.toString()}`), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "text/csv",
+    },
+  });
+
+  if (!response.ok) {
+    const payload = await parseJson(response);
+    throw normalizeError(response.status, payload, response.headers.get("x-request-id"));
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "monitoring-accesses.csv";
+  anchor.click();
+  window.URL.revokeObjectURL(url);
 }
 
 export async function createProject(accessToken: string, payload: ProjectCreateInput): Promise<ProjectApiItem> {
